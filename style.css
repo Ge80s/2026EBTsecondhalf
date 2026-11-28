@@ -124,6 +124,10 @@ body {
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
     }
+    .tem-linked-event { cursor: pointer; }
+    .tem-linked-event:hover, .tem-linked-event:focus-visible {
+        outline: 2px solid #d84315; outline-offset: 2px;
+    }
     @media screen and (max-width: 700px) {
         .phase-row { display: block; }
         .col-left, .col-right { width: 100%; }
@@ -289,7 +293,7 @@ body {
         .phase-row { align-items: flex-start !important; margin-bottom: 12px; min-height: auto !important; }
         .phase-row-resizer { display: none !important; }
         .col-left, .col-right { overflow: visible !important; height: auto !important; }
-        .col-right { background: #fffcf5 !important; }
+        .col-right { background: #fffcf5 !important; padding-top: 0 !important; padding-bottom: 0 !important; }
         .box { box-shadow: none; margin-bottom: 3px; break-inside: auto; }
         .dashboard-wrap, .phase-sep, .sc-head { break-inside: avoid; }
         .phase-flow-wrap { break-inside: avoid; }

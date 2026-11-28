@@ -48,21 +48,68 @@ function recalculatePhaseRowHeights(phaseRow) {
         
         if (!colLeft || !colRight) return;
         
-        let isScrollingLeft = false;
-        let isScrollingRight = false;
+        let scrollOffset = 0;
+        let expectedLeft = null;
+        let expectedRight = null;
+
+        function scrollColumn(column, top) {
+            column.scrollTo({ top, behavior: 'instant' });
+            return column.scrollTop;
+        }
         
         colLeft.addEventListener('scroll', () => {
-            if (isScrollingRight) return;
-            isScrollingLeft = true;
-            colRight.scrollTop = colLeft.scrollTop;
-            isScrollingLeft = false;
+            if (window.matchMedia('(max-width: 700px)').matches) return;
+            if (expectedLeft !== null && Math.abs(colLeft.scrollTop - expectedLeft) < 1) {
+                expectedLeft = null;
+                return;
+            }
+            expectedLeft = null;
+            expectedRight = scrollColumn(colRight, colLeft.scrollTop + scrollOffset);
         });
         
         colRight.addEventListener('scroll', () => {
-            if (isScrollingLeft) return;
-            isScrollingRight = true;
-            colLeft.scrollTop = colRight.scrollTop;
-            isScrollingRight = false;
+            if (window.matchMedia('(max-width: 700px)').matches) return;
+            if (expectedRight !== null && Math.abs(colRight.scrollTop - expectedRight) < 1) {
+                expectedRight = null;
+                return;
+            }
+            expectedRight = null;
+            expectedLeft = scrollColumn(colLeft, colRight.scrollTop - scrollOffset);
+        });
+
+        function alignEvent(eventCard) {
+            const target = document.getElementById(eventCard.dataset.temTarget);
+            if (!target || !colRight.contains(target)) return;
+            if (window.matchMedia('(max-width: 700px)').matches) {
+                target.scrollIntoView({ behavior: 'instant', block: 'start' });
+                return;
+            }
+            colRight.style.paddingTop = '';
+            colRight.style.paddingBottom = '';
+            const scale = colRight.getBoundingClientRect().width / colRight.offsetWidth;
+            const leftPosition = (eventCard.getBoundingClientRect().top - colLeft.getBoundingClientRect().top) / scale;
+            const rightPosition = (target.getBoundingClientRect().top - colRight.getBoundingClientRect().top) / scale;
+            const desiredTop = colRight.scrollTop + rightPosition - leftPosition;
+            if (desiredTop < 0) {
+                colRight.style.paddingTop = Math.ceil(-desiredTop) + 'px';
+            } else {
+                const extraSpace = Math.max(0, desiredTop - (colRight.scrollHeight - colRight.clientHeight));
+                if (extraSpace) colRight.style.paddingBottom = Math.ceil(extraSpace) + 'px';
+            }
+            expectedRight = scrollColumn(colRight, Math.max(0, desiredTop));
+            scrollOffset = colRight.scrollTop - colLeft.scrollTop;
+        }
+
+        colLeft.addEventListener('click', event => {
+            const card = event.target.closest('.tem-linked-event');
+            if (card && colLeft.contains(card)) alignEvent(card);
+        });
+        colLeft.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            const card = event.target.closest('.tem-linked-event');
+            if (!card || !colLeft.contains(card)) return;
+            event.preventDefault();
+            alignEvent(card);
         });
     });
 })();
